@@ -1,4 +1,4 @@
-import { Object3D, OrthographicCamera, AudioListener, DirectionalLight, Vector3 } from "three";
+import { Object3D, PerspectiveCamera, AudioListener, DirectionalLight, Vector3, ConeGeometry, MeshPhongMaterial, Mesh } from "three";
 
 export class PlayerObject {
     constructor() {
@@ -7,12 +7,20 @@ export class PlayerObject {
         this.initializeCamera()
 
         this.listener = new AudioListener()
-        this.center.add(this.listener)
+        this.camera.add(this.listener)
 
         this.light = new DirectionalLight(0xffffff, 1)
         this.light.position.set(-5, -5, 5)
         this.light.target = this.center
         this.center.add(this.light)
+
+        const playerGeometry = new ConeGeometry(0.5, 1, 32)
+        const playerMaterial = new MeshPhongMaterial({ color: 0xffffff })
+        this.player = new Mesh(playerGeometry, playerMaterial)
+        this.player.rotation.order = "ZXY"
+        this.player.rotation.z = -Math.PI / 2
+        this.center.add(this.player)
+
 
         this.initializeControls()
 
@@ -22,54 +30,67 @@ export class PlayerObject {
 
         this.MAX_ACCELERATION = 0.1
         this.MAX_SPEED = 0.1
-        this.MAX_YAW_RATE = 0.05
+        this.MAX_YAW_RATE = 0.025
 
         this.keyState = {}
 
         this.MAX_FRICTION = 0.01
     }
 
-    getCameraDimensions() {
-        const MAX_DIMENSION = 10
-      
-        if (window.innerWidth > window.innerHeight) {
-          const aspect = window.innerHeight / window.innerWidth
-      
-          return [MAX_DIMENSION, MAX_DIMENSION * aspect]
-        } else {
-          const aspect = window.innerWidth / window.innerHeight
-      
-          return [MAX_DIMENSION * aspect, MAX_DIMENSION]
-        }
-    }
-
     initializeCamera() {
-        const [width, height] = this.getCameraDimensions()
-        this.camera = new OrthographicCamera(-width, width, height, -height, 0, 1000)
+        this.camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000)
 
-        this.camera.position.set(5, -5, 5)
+        this.camera.position.set(-5, 0, 5)
 
         this.camera.rotation.order = "ZXY" // yaw, pitch, roll
-        this.camera.rotation.z = Math.PI / 4
-        this.camera.rotation.x = Math.PI / 4
+        this.camera.rotation.z = -Math.PI / 2
+        this.camera.rotation.x = Math.PI / 3
 
         this.center.add(this.camera)
+    }
+
+    get upPressed() {
+        return (
+            (this.keyState["ArrowUp"] || this.keyState["w"])
+            && !(this.keyState["ArrowDown"] || this.keyState["s"])
+        )
+    }
+
+    get downPressed() {
+        return (
+            (this.keyState["ArrowDown"] || this.keyState["s"])
+            && !(this.keyState["ArrowUp"] || this.keyState["w"])
+        )
+    }
+
+    get leftPressed() {
+        return (
+            (this.keyState["ArrowLeft"] || this.keyState["a"])
+            && !(this.keyState["ArrowRight"] || this.keyState["d"])
+        )
+    }
+
+    get rightPressed() {
+        return (
+            (this.keyState["ArrowRight"] || this.keyState["d"])
+            && !(this.keyState["ArrowLeft"] || this.keyState["a"])
+        )
     }
 
     update() {
         this.applyFriction()
 
-        if (this.keyState["ArrowUp"] && !this.keyState["ArrowDown"]) {
+        if (this.upPressed) {
             this.acceleration = this.MAX_ACCELERATION
-        } else if (this.keyState["ArrowDown"] && !this.keyState["ArrowUp"]) {
+        } else if (this.downPressed) {
             this.acceleration = -this.MAX_ACCELERATION
         } else {
             this.acceleration = 0
         }
 
-        if (this.keyState["ArrowLeft"] && !this.keyState["ArrowRight"]) {
+        if (this.leftPressed) {
             this.yawRate = this.MAX_YAW_RATE
-        } else if (this.keyState["ArrowRight"] && !this.keyState["ArrowLeft"]) {
+        } else if (this.rightPressed) {
             this.yawRate = -this.MAX_YAW_RATE
         }
 
