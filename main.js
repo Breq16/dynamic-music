@@ -1,29 +1,75 @@
 import './style.css'
 
-import { Scene, PerspectiveCamera, WebGLRenderer, BoxGeometry, MeshBasicMaterial, Mesh } from "three"
+import { SoundObject } from './SoundObject'
+
+import { Scene, WebGLRenderer, AudioLoader, Vector3, Color, GridHelper } from "three"
+import { PlayerObject } from './PlayerObject'
 
 const scene = new Scene()
-const camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
+
+const player = new PlayerObject()
+scene.add(player.center)
 
 const renderer = new WebGLRenderer()
 renderer.setSize(window.innerWidth, window.innerHeight)
 
 document.body.appendChild(renderer.domElement)
 
+const grid = new GridHelper()
+grid.rotation.x = Math.PI / 2
+scene.add(grid)
 
-const geometry = new BoxGeometry()
-const material = new MeshBasicMaterial({ color: 0xff00ff })
-const cube = new Mesh(geometry, material)
-scene.add(cube)
 
-camera.position.z = 5
+const audioLoader = new AudioLoader()
+
+const stems = ["bass-guitar", "heavy-drums", "lead-guitar", "lead-synth", "light-drums"]
+
+const getPosition = angle => new Vector3(5 * Math.cos(angle * 2 * Math.PI + Math.PI / 2), 5 * Math.sin(angle * 2 * Math.PI + Math.PI / 2), 0)
+
+const getColor = angle => new Color(`hsl(${angle * 360}, 100%, 50%)`)
+
+const objects = stems.map((stem, i) => new SoundObject({
+    stem,
+    position: getPosition(i / stems.length),
+    color: getColor(i / stems.length),
+    scene,
+    listener: player.listener,
+}))
+
 
 function animate() {
-  requestAnimationFrame(animate)
+    requestAnimationFrame(animate)
 
-  cube.rotation.x += 0.01
-  cube.rotation.y += 0.01
+    player.update()
 
-  renderer.render(scene, camera)
+    renderer.render(scene, player.camera)
 }
 animate()
+
+
+function getConfirm() {
+    const wrapper = document.createElement("div")
+    const button = document.createElement("button")
+    wrapper.appendChild(button)
+
+    wrapper.id = "ConfirmButton"
+    button.textContent = "begin"
+
+    document.body.appendChild(wrapper)
+
+    return new Promise(resolve => {
+        button.addEventListener("click", (e) => {
+            document.body.removeChild(wrapper)
+            resolve()
+        }, { once: true })
+    })
+}
+
+
+Promise.all(
+    objects.map(object => object.load(audioLoader))
+).then(
+    () => getConfirm()
+).then(
+    () => objects.forEach(object => object.sound.play())
+)
