@@ -1,4 +1,4 @@
-import { Object3D, PerspectiveCamera, AudioListener, DirectionalLight, Vector3, ConeGeometry, MeshPhongMaterial, Mesh } from "three";
+import { Object3D, PerspectiveCamera, AudioListener, DirectionalLight, Vector3, ConeGeometry, MeshPhongMaterial, Mesh, ArrowHelper } from "three";
 
 export class PlayerObject {
     constructor() {
@@ -7,7 +7,13 @@ export class PlayerObject {
         this.initializeCamera()
 
         this.listener = new AudioListener()
-        this.camera.add(this.listener)
+        this.listener.rotation.order = "ZXY"
+        this.listener.rotation.z = -Math.PI / 2
+        this.listener.rotation.x = -Math.PI / 2
+
+        // const helper = new ArrowHelper(new Vector3(0, 0, 1), new Vector3(0, 0, 0), 1)
+        // this.listener.add(helper)
+        this.center.add(this.listener)
 
         this.light = new DirectionalLight(0xffffff, 1)
         this.light.position.set(-5, -5, 5)
@@ -28,19 +34,21 @@ export class PlayerObject {
         this.speed = 0
         this.yawRate = 0
 
-        this.MAX_ACCELERATION = 0.1
-        this.MAX_SPEED = 0.1
+        this.MAX_ACCELERATION = 0.01
+        this.MAX_SPEED = 0.5
         this.MAX_YAW_RATE = 0.025
 
         this.keyState = {}
 
         this.MAX_FRICTION = 0.01
+
+        this.holding = null
     }
 
     initializeCamera() {
         this.camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000)
 
-        this.camera.position.set(-5, 0, 5)
+        this.camera.position.set(-10, 0, 10)
 
         this.camera.rotation.order = "ZXY" // yaw, pitch, roll
         this.camera.rotation.z = -Math.PI / 2
@@ -107,6 +115,8 @@ export class PlayerObject {
         )
 
         this.center.rotation.z += this.yawRate
+
+        console.log(this.acceleration, this.speed)
     }
 
     initializeControls() {
@@ -120,10 +130,50 @@ export class PlayerObject {
         document.addEventListener("keyup", event => {
             this.keyState[event.key] = false
         })
+
+        document.addEventListener("keydown", event => {
+            if (event.key === " ") {
+                this.attemptGrab()
+            }
+        })
     }
 
     applyFriction() {
-        this.speed *= 0.9
-        this.yawRate *= 0.9
+        this.speed *= 0.95
+        this.yawRate *= 0.95
+    }
+
+    attemptGrab() {
+        if (this.holding) {
+            // Release the object
+            this.center.parent.attach(this.holding.mesh)
+            this.holding.mesh.scale.set(1, 1, 1)
+            this.player.material.color.set(0xffffff)
+
+            this.holding = null
+
+        } else {
+            // If the closest object is close enough, grab it
+            let closest = null
+            let closestDistance = Infinity
+            for (let object of this.objects) {
+                const distance = this.center.position.distanceTo(object.mesh.position)
+                if (distance < closestDistance) {
+                    closest = object
+                    closestDistance = distance
+                }
+            }
+
+            if (closestDistance > 2) {
+                return
+            }
+
+
+            this.holding = closest
+            this.holding.mesh.position.set(-1, 0, 0)
+            this.holding.mesh.scale.set(0.5, 0.5, 0.5)
+            this.center.add(this.holding.mesh)
+            this.player.material.color.set(this.holding.mesh.material.color)
+        }
     }
 }

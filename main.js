@@ -22,7 +22,7 @@ scene.add(grid)
 
 const audioLoader = new AudioLoader()
 
-const stems = ["bass-guitar", "heavy-drums", "lead-guitar", "lead-synth", "light-drums"]
+const stems = ["bass-guitar", "heavy-drums", "lead-guitar", "lead-synth", "light-drums", "chiptune", "mallets", "misc-perc", "piano"]
 
 const getPosition = angle => new Vector3(20 * Math.cos(angle * 2 * Math.PI + Math.PI / 2), 20 * Math.sin(angle * 2 * Math.PI + Math.PI / 2), 0)
 
@@ -35,6 +35,9 @@ const objects = stems.map((stem, i) => new SoundObject({
     scene,
     listener: player.listener,
 }))
+
+
+player.objects = objects
 
 
 function animate() {
