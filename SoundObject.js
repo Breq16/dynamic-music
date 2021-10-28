@@ -1,4 +1,4 @@
-import { Mesh, MeshPhongMaterial, PositionalAudio, SphereGeometry, } from "three"
+import { Mesh, MeshPhongMaterial, PositionalAudio, SphereGeometry } from "three"
 
 export class SoundObject {
     constructor({ stem, position, color, scene, listener }) {
@@ -14,7 +14,7 @@ export class SoundObject {
 
         this.sound = new PositionalAudio(listener)
         this.sound.loop = true
-        this.sound.setRefDistance(20)
+        this.sound.setRefDistance(2)
         this.mesh.add(this.sound)
 
         scene.add(this.mesh)
@@ -25,7 +25,6 @@ export class SoundObject {
         const buffer = await loader.loadAsync(`/audio/${this.stem}.wav`)
 
         this.sound.setBuffer(buffer)
-        this.sound.setRefDistance(2)
     }
 
     play() {

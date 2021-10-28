@@ -1,19 +1,20 @@
-import { Object3D, PerspectiveCamera, AudioListener, DirectionalLight, Vector3, ConeGeometry, MeshPhongMaterial, Mesh, ArrowHelper } from "three";
+import {
+    Object3D,
+    PerspectiveCamera,
+    AudioListener,
+    DirectionalLight,
+    Vector3,
+    ConeGeometry,
+    MeshPhongMaterial,
+    Mesh,
+    ArrowHelper,
+} from "three"
 
 export class PlayerObject {
     constructor() {
         this.center = new Object3D()
 
         this.initializeCamera()
-
-        this.listener = new AudioListener()
-        this.listener.rotation.order = "ZXY"
-        this.listener.rotation.z = -Math.PI / 2
-        this.listener.rotation.x = -Math.PI / 2
-
-        // const helper = new ArrowHelper(new Vector3(0, 0, 1), new Vector3(0, 0, 0), 1)
-        // this.listener.add(helper)
-        this.center.add(this.listener)
 
         this.light = new DirectionalLight(0xffffff, 1)
         this.light.position.set(-5, -5, 5)
@@ -26,7 +27,6 @@ export class PlayerObject {
         this.player.rotation.order = "ZXY"
         this.player.rotation.z = -Math.PI / 2
         this.center.add(this.player)
-
 
         this.initializeControls()
 
@@ -46,42 +46,51 @@ export class PlayerObject {
     }
 
     initializeCamera() {
-        this.camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000)
+        this.camera = new PerspectiveCamera(
+            75,
+            window.innerWidth / window.innerHeight,
+            0.1,
+            1000
+        )
 
-        this.camera.position.set(-10, 0, 10)
+        this.camera.position.set(-5, 0, 5)
 
         this.camera.rotation.order = "ZXY" // yaw, pitch, roll
         this.camera.rotation.z = -Math.PI / 2
         this.camera.rotation.x = Math.PI / 3
 
         this.center.add(this.camera)
+
+        this.listener = new AudioListener()
+
+        this.camera.add(this.listener)
     }
 
     get upPressed() {
         return (
-            (this.keyState["ArrowUp"] || this.keyState["w"])
-            && !(this.keyState["ArrowDown"] || this.keyState["s"])
+            (this.keyState["ArrowUp"] || this.keyState["w"]) &&
+            !(this.keyState["ArrowDown"] || this.keyState["s"])
         )
     }
 
     get downPressed() {
         return (
-            (this.keyState["ArrowDown"] || this.keyState["s"])
-            && !(this.keyState["ArrowUp"] || this.keyState["w"])
+            (this.keyState["ArrowDown"] || this.keyState["s"]) &&
+            !(this.keyState["ArrowUp"] || this.keyState["w"])
         )
     }
 
     get leftPressed() {
         return (
-            (this.keyState["ArrowLeft"] || this.keyState["a"])
-            && !(this.keyState["ArrowRight"] || this.keyState["d"])
+            (this.keyState["ArrowLeft"] || this.keyState["a"]) &&
+            !(this.keyState["ArrowRight"] || this.keyState["d"])
         )
     }
 
     get rightPressed() {
         return (
-            (this.keyState["ArrowRight"] || this.keyState["d"])
-            && !(this.keyState["ArrowLeft"] || this.keyState["a"])
+            (this.keyState["ArrowRight"] || this.keyState["d"]) &&
+            !(this.keyState["ArrowLeft"] || this.keyState["a"])
         )
     }
 
@@ -104,7 +113,10 @@ export class PlayerObject {
 
         this.speed += this.acceleration
 
-        this.speed = Math.max(-this.MAX_SPEED, Math.min(this.MAX_SPEED, this.speed))
+        this.speed = Math.max(
+            -this.MAX_SPEED,
+            Math.min(this.MAX_SPEED, this.speed)
+        )
 
         this.center.position.add(
             new Vector3(
@@ -120,18 +132,18 @@ export class PlayerObject {
     }
 
     initializeControls() {
-        document.addEventListener("keydown", event => {
+        document.addEventListener("keydown", (event) => {
             if (event.repeat) {
                 return
             }
             this.keyState[event.key] = true
         })
 
-        document.addEventListener("keyup", event => {
+        document.addEventListener("keyup", (event) => {
             this.keyState[event.key] = false
         })
 
-        document.addEventListener("keydown", event => {
+        document.addEventListener("keydown", (event) => {
             if (event.key === " ") {
                 this.attemptGrab()
             }
@@ -151,13 +163,14 @@ export class PlayerObject {
             this.player.material.color.set(0xffffff)
 
             this.holding = null
-
         } else {
             // If the closest object is close enough, grab it
             let closest = null
             let closestDistance = Infinity
             for (let object of this.objects) {
-                const distance = this.center.position.distanceTo(object.mesh.position)
+                const distance = this.center.position.distanceTo(
+                    object.mesh.position
+                )
                 if (distance < closestDistance) {
                     closest = object
                     closestDistance = distance
@@ -167,7 +180,6 @@ export class PlayerObject {
             if (closestDistance > 2) {
                 return
             }
-
 
             this.holding = closest
             this.holding.mesh.position.set(-1, 0, 0)

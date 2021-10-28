@@ -1,9 +1,16 @@
-import './style.css'
+import "./style.css"
 
-import { SoundObject } from './SoundObject'
+import { SoundObject } from "./SoundObject"
 
-import { Scene, WebGLRenderer, AudioLoader, Vector3, Color, GridHelper } from "three"
-import { PlayerObject } from './PlayerObject'
+import {
+    Scene,
+    WebGLRenderer,
+    AudioLoader,
+    Vector3,
+    Color,
+    GridHelper,
+} from "three"
+import { PlayerObject } from "./PlayerObject"
 
 const scene = new Scene()
 
@@ -19,26 +26,41 @@ const grid = new GridHelper(100, 100)
 grid.rotation.x = Math.PI / 2
 scene.add(grid)
 
-
 const audioLoader = new AudioLoader()
 
-const stems = ["bass-guitar", "heavy-drums", "lead-guitar", "lead-synth", "light-drums", "chiptune", "mallets", "misc-perc", "piano"]
+const stems = [
+    "bass-guitar",
+    "heavy-drums",
+    "lead-guitar",
+    "lead-synth",
+    "light-drums",
+    "chiptune",
+    "mallets",
+    "misc-perc",
+    "piano",
+]
 
-const getPosition = angle => new Vector3(20 * Math.cos(angle * 2 * Math.PI + Math.PI / 2), 20 * Math.sin(angle * 2 * Math.PI + Math.PI / 2), 0)
+const getPosition = (angle) =>
+    new Vector3(
+        20 * Math.cos(angle * 2 * Math.PI + Math.PI / 2),
+        20 * Math.sin(angle * 2 * Math.PI + Math.PI / 2),
+        0
+    )
 
-const getColor = angle => new Color(`hsl(${angle * 360}, 100%, 50%)`)
+const getColor = (angle) => new Color(`hsl(${angle * 360}, 100%, 50%)`)
 
-const objects = stems.map((stem, i) => new SoundObject({
-    stem,
-    position: getPosition(i / stems.length),
-    color: getColor(i / stems.length),
-    scene,
-    listener: player.listener,
-}))
-
+const objects = stems.map(
+    (stem, i) =>
+        new SoundObject({
+            stem,
+            position: getPosition(i / stems.length),
+            color: getColor(i / stems.length),
+            scene,
+            listener: player.listener,
+        })
+)
 
 player.objects = objects
-
 
 function animate() {
     requestAnimationFrame(animate)
@@ -48,7 +70,6 @@ function animate() {
     renderer.render(scene, player.camera)
 }
 animate()
-
 
 function getConfirm() {
     const wrapper = document.createElement("div")
@@ -60,19 +81,18 @@ function getConfirm() {
 
     document.body.appendChild(wrapper)
 
-    return new Promise(resolve => {
-        button.addEventListener("click", (e) => {
-            document.body.removeChild(wrapper)
-            resolve()
-        }, { once: true })
+    return new Promise((resolve) => {
+        button.addEventListener(
+            "click",
+            (e) => {
+                document.body.removeChild(wrapper)
+                resolve()
+            },
+            { once: true }
+        )
     })
 }
 
-
-Promise.all(
-    objects.map(object => object.load(audioLoader))
-).then(
-    () => getConfirm()
-).then(
-    () => objects.forEach(object => object.sound.play())
-)
+Promise.all(objects.map((object) => object.load(audioLoader)))
+    .then(() => getConfirm())
+    .then(() => objects.forEach((object) => object.sound.play()))
