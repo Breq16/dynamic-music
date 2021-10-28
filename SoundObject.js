@@ -4,8 +4,6 @@ export class SoundObject {
     constructor({ stem, position, color, scene, listener }) {
         this.stem = stem
 
-        console.log(color)
-
         const geometry = new SphereGeometry(1, 32, 16)
         const material = new MeshPhongMaterial({ color })
 
@@ -28,7 +26,6 @@ export class SoundObject {
     }
 
     play() {
-        console.log("playing sound", this.stem)
         this.sound.play()
     }
 }

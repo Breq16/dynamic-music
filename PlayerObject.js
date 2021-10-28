@@ -7,7 +7,6 @@ import {
     ConeGeometry,
     MeshPhongMaterial,
     Mesh,
-    ArrowHelper,
 } from "three"
 
 export class PlayerObject {
@@ -127,8 +126,6 @@ export class PlayerObject {
         )
 
         this.center.rotation.z += this.yawRate
-
-        console.log(this.acceleration, this.speed)
     }
 
     initializeControls() {
