@@ -14,7 +14,7 @@ import { PlayerObject } from "./PlayerObject"
 
 const scene = new Scene()
 
-const player = new PlayerObject()
+const player = new PlayerObject(scene)
 scene.add(player.center)
 
 const renderer = new WebGLRenderer()
@@ -23,7 +23,6 @@ renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
 const grid = new GridHelper(100, 100)
-grid.rotation.x = Math.PI / 2
 scene.add(grid)
 
 const audioLoader = new AudioLoader()
@@ -43,8 +42,8 @@ const stems = [
 const getPosition = (angle) =>
     new Vector3(
         20 * Math.cos(angle * 2 * Math.PI + Math.PI / 2),
-        20 * Math.sin(angle * 2 * Math.PI + Math.PI / 2),
-        0
+        0,
+        20 * Math.sin(angle * 2 * Math.PI + Math.PI / 2)
     )
 
 const getColor = (angle) => new Color(`hsl(${angle * 360}, 100%, 50%)`)
@@ -62,12 +61,29 @@ const objects = stems.map(
 
 player.objects = objects
 
+let tips = []
+
 function animate() {
     requestAnimationFrame(animate)
 
     player.update()
 
     renderer.render(scene, player.camera)
+
+    let newTips = ["use the arrow keys to move around"]
+
+    if (player.holding) {
+        newTips.push("press <kbd>space</kbd> to release")
+    } else if (player.getCloseSoundObject()) {
+        newTips.push("press <kbd>space</kbd> to pick up the sound")
+    } else {
+        newTips.push("approach a sound to pick it up")
+    }
+
+    if (tips != newTips) {
+        tips = newTips
+        document.getElementById("Tips").innerHTML = tips.join("<br>")
+    }
 }
 animate()
 
@@ -77,7 +93,7 @@ function getConfirm() {
     wrapper.appendChild(button)
 
     wrapper.id = "ConfirmButton"
-    button.textContent = "begin"
+    button.textContent = "click to start"
 
     document.body.appendChild(wrapper)
 

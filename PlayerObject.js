@@ -1,3 +1,4 @@
+import { AxesHelper } from "three"
 import {
     Object3D,
     PerspectiveCamera,
@@ -13,19 +14,18 @@ export class PlayerObject {
     constructor() {
         this.center = new Object3D()
 
-        this.initializeCamera()
-
         this.light = new DirectionalLight(0xffffff, 1)
-        this.light.position.set(-5, -5, 5)
+        this.light.position.set(0, 5, 5)
         this.light.target = this.center
         this.center.add(this.light)
 
         const playerGeometry = new ConeGeometry(0.5, 1, 32)
         const playerMaterial = new MeshPhongMaterial({ color: 0xffffff })
         this.player = new Mesh(playerGeometry, playerMaterial)
-        this.player.rotation.order = "ZXY"
-        this.player.rotation.z = -Math.PI / 2
+        this.player.rotation.x = -Math.PI / 2
         this.center.add(this.player)
+
+        this.initializeCamera()
 
         this.initializeControls()
 
@@ -52,17 +52,13 @@ export class PlayerObject {
             1000
         )
 
-        this.camera.position.set(-5, 0, 5)
-
-        this.camera.rotation.order = "ZXY" // yaw, pitch, roll
-        this.camera.rotation.z = -Math.PI / 2
-        this.camera.rotation.x = Math.PI / 3
+        this.camera.position.set(0, 5, 5)
+        this.camera.lookAt(this.center.position)
 
         this.center.add(this.camera)
 
         this.listener = new AudioListener()
-
-        this.camera.add(this.listener)
+        this.center.add(this.listener)
     }
 
     get upPressed() {
@@ -119,13 +115,13 @@ export class PlayerObject {
 
         this.center.position.add(
             new Vector3(
-                this.speed * Math.cos(this.center.rotation.z),
-                this.speed * Math.sin(this.center.rotation.z),
-                0
+                -this.speed * Math.sin(this.center.rotation.y),
+                0,
+                -this.speed * Math.cos(this.center.rotation.y)
             )
         )
 
-        this.center.rotation.z += this.yawRate
+        this.center.rotation.y += this.yawRate
     }
 
     initializeControls() {
@@ -152,6 +148,26 @@ export class PlayerObject {
         this.yawRate *= 0.95
     }
 
+    getCloseSoundObject() {
+        let closest = null
+        let closestDistance = Infinity
+        for (let object of this.objects) {
+            const distance = this.center.position.distanceTo(
+                object.mesh.position
+            )
+            if (distance < closestDistance) {
+                closest = object
+                closestDistance = distance
+            }
+        }
+
+        if (closestDistance > 2) {
+            return
+        }
+
+        return closest
+    }
+
     attemptGrab() {
         if (this.holding) {
             // Release the object
@@ -162,27 +178,15 @@ export class PlayerObject {
             this.holding = null
         } else {
             // If the closest object is close enough, grab it
-            let closest = null
-            let closestDistance = Infinity
-            for (let object of this.objects) {
-                const distance = this.center.position.distanceTo(
-                    object.mesh.position
-                )
-                if (distance < closestDistance) {
-                    closest = object
-                    closestDistance = distance
-                }
-            }
+            const closest = this.getCloseSoundObject()
 
-            if (closestDistance > 2) {
-                return
+            if (closest) {
+                this.holding = closest
+                this.holding.mesh.position.set(0, 0, 1)
+                this.holding.mesh.scale.set(0.5, 0.5, 0.5)
+                this.center.add(this.holding.mesh)
+                this.player.material.color.set(this.holding.mesh.material.color)
             }
-
-            this.holding = closest
-            this.holding.mesh.position.set(-1, 0, 0)
-            this.holding.mesh.scale.set(0.5, 0.5, 0.5)
-            this.center.add(this.holding.mesh)
-            this.player.material.color.set(this.holding.mesh.material.color)
         }
     }
 }
